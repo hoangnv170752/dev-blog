@@ -243,17 +243,23 @@ export const fallbackTags = [
 
 // Fetch data from Strapi with better error handling
 const API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL || "http://localhost:1337"
+const API_TOKEN = process.env.NEXT_PUBLIC_STRAPI_API_TOKEN || ""
 
 // Helper to handle API responses with better error handling
-async function fetchAPI(endpoint: string, options = {}) {
+async function fetchAPI(endpoint: string, options: RequestInit = {}) {
   try {
     console.log(`Fetching from: ${API_URL}/api${endpoint}`)
+    
+    // Prepare headers with proper authorization
+    const headers = {
+      "Content-Type": "application/json",
+      ...(API_TOKEN ? { "Authorization": `Bearer ${API_TOKEN}` } : {}),
+      ...(options.headers || {})
+    };
+    
     const res = await fetch(`${API_URL}/api${endpoint}`, {
       ...options,
-      headers: {
-        ...options.headers,
-        "Content-Type": "application/json",
-      },
+      headers,
       next: { revalidate: 60 }, // Cache for 60 seconds
     })
 

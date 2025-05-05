@@ -11,8 +11,8 @@ export default async function Home() {
   const posts = postsData?.data || []
 
   return (
-    <div className="bg-background">
-      <section className="container py-12 md:py-24">
+    <div className="bg-background w-full">
+      <section className="w-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-24">
         <div className="mb-12">
           <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl md:text-6xl mb-2">
             Latest Articles
