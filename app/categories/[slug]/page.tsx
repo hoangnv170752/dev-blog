@@ -6,6 +6,47 @@ import { ChevronLeft, ChevronRight } from "lucide-react"
 import { notFound } from "next/navigation"
 import { getPostsByCategory } from "@/lib/strapi"
 
+interface PostAttributes {
+  title: string;
+  slug: string;
+  excerpt: string;
+  publishedAt: string;
+  cover?: {
+    data?: {
+      attributes?: {
+        url: string;
+      };
+    };
+  };
+  author?: {
+    data?: {
+      attributes?: {
+        name: string;
+        avatar?: {
+          data?: {
+            attributes?: {
+              url: string;
+            };
+          };
+        };
+      };
+    };
+  };
+  category?: {
+    data?: {
+      attributes?: {
+        name: string;
+        slug: string;
+      };
+    };
+  };
+}
+
+interface Post {
+  id: string;
+  attributes: PostAttributes;
+}
+
 export interface CategoryPageProps {
   params: {
     slug: string
@@ -33,101 +74,106 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
   const categoryName = posts[0]?.attributes.category?.data?.attributes?.name || params.slug.toUpperCase()
 
   return (
-    <div className="container py-8">
-      <h1 className="text-3xl font-bold mb-8">
-        {categoryName} ({pagination.total})
-      </h1>
+    <div className="w-full bg-background">
+      <div className="w-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+        <h1 className="text-3xl font-bold mb-8">
+          {categoryName} ({pagination.total})
+        </h1>
 
-      {posts.length > 0 ? (
-        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-          {posts.map((post) => {
-            const { id, attributes } = post
-            return (
-              <article
-                key={id}
-                className="group relative flex flex-col space-y-2 rounded-lg border border-border/50 bg-card p-4 transition-all hover:border-border"
-              >
-                <div className="relative aspect-video overflow-hidden rounded-md">
-                  <Image
-                    src={attributes.cover?.data?.attributes?.url || "/placeholder.svg?key=default-post"}
-                    alt={attributes.title}
-                    fill
-                    className="object-cover transition-transform duration-300 group-hover:scale-105"
-                  />
-                </div>
-                <div className="flex-1 space-y-4 pt-4">
-                  <div className="space-y-2">
+        {posts.length > 0 ? (
+          <div className="grid gap-4 sm:gap-6 md:gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+            {posts.map((post: Post) => {
+              const { id, attributes } = post
+              return (
+                <article
+                  key={id}
+                  className="group relative flex flex-col space-y-2 rounded-lg border border-border/50 bg-card p-4 transition-all hover:border-border"
+                >
+                  <div className="relative aspect-video overflow-hidden rounded-md">
                     <Link href={`/blog/${attributes.slug}`}>
-                      <h2 className="text-lg font-bold leading-tight tracking-tight text-foreground">
-                        {attributes.title}
-                      </h2>
+                      <Image
+                        src={
+                          attributes.cover?.data?.attributes?.url ||
+                          "/placeholder.svg?height=720&width=1280&query=blog"
+                        }
+                        alt={attributes.title}
+                        fill
+                        className="object-cover transition-all group-hover:scale-105"
+                      />
                     </Link>
-                    <p className="text-sm text-muted-foreground line-clamp-2">{attributes.description}</p>
                   </div>
-                  <div className="flex items-center justify-between">
+                  <div className="flex-1 space-y-2">
+                    <h2 className="text-xl font-bold tracking-tight">
+                      <Link href={`/blog/${attributes.slug}`}>{attributes.title}</Link>
+                    </h2>
+                    <p className="text-muted-foreground line-clamp-2">{attributes.excerpt}</p>
+                  </div>
+                  <div className="flex items-center justify-between text-sm text-muted-foreground">
                     <div className="flex items-center gap-2">
-                      <div className="relative h-6 w-6 overflow-hidden rounded-full">
+                      <div className="relative h-8 w-8 rounded-full overflow-hidden">
                         <Image
-                          src={attributes.author?.data?.attributes?.avatar || "/diverse-avatars.png"}
+                          src={
+                            attributes.author?.data?.attributes?.avatar?.data?.attributes?.url ||
+                            "/placeholder.svg?height=32&width=32&query=avatar"
+                          }
                           alt={attributes.author?.data?.attributes?.name || "Author"}
                           fill
                           className="object-cover"
                         />
                       </div>
-                      <span className="text-xs font-medium">
-                        {attributes.author?.data?.attributes?.name || "Author"}
-                      </span>
+                      <span>{attributes.author?.data?.attributes?.name || "Anonymous"}</span>
                     </div>
-                    <time dateTime={attributes.publishedAt} className="text-xs text-muted-foreground">
-                      {formatDate(attributes.publishedAt)}
-                    </time>
+                    <time dateTime={attributes.publishedAt}>{formatDate(attributes.publishedAt)}</time>
                   </div>
-                </div>
-              </article>
-            )
-          })}
-        </div>
-      ) : (
-        <div className="text-center p-8 border border-dashed rounded-lg">
-          <p className="text-muted-foreground">
-            No posts found for this category. Please check your Strapi connection or add some posts with this category.
-          </p>
-        </div>
-      )}
+                </article>
+              )
+            })}
+          </div>
+        ) : (
+          <div className="text-center p-8 border border-dashed rounded-lg">
+            <p className="text-muted-foreground">No posts found for this category.</p>
+          </div>
+        )}
 
-      {pagination.pageCount > 1 && (
-        <div className="mt-8 flex items-center justify-between">
-          <Button variant="outline" size="sm" disabled={currentPage <= 1} asChild>
-            {currentPage > 1 ? (
-              <Link href={`/categories/${params.slug}?page=${currentPage - 1}`}>
-                <ChevronLeft className="mr-2 h-4 w-4" />
-                Previous
-              </Link>
-            ) : (
-              <span>
-                <ChevronLeft className="mr-2 h-4 w-4" />
-                Previous
-              </span>
-            )}
-          </Button>
-          <span className="text-sm text-muted-foreground">
-            {currentPage} of {pagination.pageCount}
-          </span>
-          <Button variant="outline" size="sm" disabled={currentPage >= pagination.pageCount} asChild>
-            {currentPage < pagination.pageCount ? (
-              <Link href={`/categories/${params.slug}?page=${currentPage + 1}`}>
-                Next
-                <ChevronRight className="ml-2 h-4 w-4" />
-              </Link>
-            ) : (
-              <span>
-                Next
-                <ChevronRight className="ml-2 h-4 w-4" />
-              </span>
-            )}
-          </Button>
-        </div>
-      )}
+        {pagination.pageCount > 1 && (
+          <div className="flex justify-center gap-2 mt-12">
+            <Button
+              variant="outline"
+              disabled={currentPage <= 1}
+              asChild={currentPage > 1}
+            >
+              {currentPage > 1 ? (
+                <Link href={`/categories/${params.slug}?page=${currentPage - 1}`}>
+                  <ChevronLeft className="mr-2 h-4 w-4" />
+                  Previous
+                </Link>
+              ) : (
+                <>
+                  <ChevronLeft className="mr-2 h-4 w-4" />
+                  Previous
+                </>
+              )}
+            </Button>
+            <Button
+              variant="outline"
+              disabled={currentPage >= pagination.pageCount}
+              asChild={currentPage < pagination.pageCount}
+            >
+              {currentPage < pagination.pageCount ? (
+                <Link href={`/categories/${params.slug}?page=${currentPage + 1}`}>
+                  Next
+                  <ChevronRight className="ml-2 h-4 w-4" />
+                </Link>
+              ) : (
+                <>
+                  Next
+                  <ChevronRight className="ml-2 h-4 w-4" />
+                </>
+              )}
+            </Button>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

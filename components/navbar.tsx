@@ -51,7 +51,7 @@ export default function Navbar() {
             <div className="relative h-8 w-8">
               <Image src="/placeholder.svg?key=6a40v" alt="Logo" width={32} height={32} className="rounded" />
             </div>
-            <span className="text-xl font-bold">Modern Blog</span>
+            <span className="text-xl font-bold">Akashi da Blog</span>
           </Link>
         </div>
 
